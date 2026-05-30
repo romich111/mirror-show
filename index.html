@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mirror Show - A premium luxury mirror app for self-love">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mirror Show">
+    
+    <title>Mirror Show 💖</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23ff1493'/></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><circle cx='90' cy='90' r='80' fill='%23ff1493'/></svg>">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Start Screen -->
+    <div id="startScreen" class="screen active">
+        <div class="stars-container">
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+        </div>
+
+        <div class="start-content">
+            <div class="title-container">
+                <h1 class="title">Mirror Show 💖</h1>
+                <div class="glow-text">Mirror Show 💖</div>
+            </div>
+
+            <p class="subtitle">See your beauty shine ✨</p>
+
+            <button id="startBtn" class="start-button">
+                <span class="flower">🌸</span>
+                <span class="btn-text">Begin Your Glow</span>
+                <span class="flower">🌸</span>
+            </button>
+
+            <div class="floating-hearts">
+                <div class="heart">💕</div>
+                <div class="heart">💖</div>
+                <div class="heart">✨</div>
+                <div class="heart">🌸</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mirror Screen -->
+    <div id="mirrorScreen" class="screen">
+        <div class="mirror-container">
+            <!-- Video element for camera feed -->
+            <video id="videoFeed" class="video-feed" autoplay playsinline muted></video>
+            
+            <!-- Canvas for effects -->
+            <canvas id="effectCanvas" class="effect-canvas"></canvas>
+
+            <!-- Ring Light Effect -->
+            <div id="ringLight" class="ring-light"></div>
+
+            <!-- Face Detection Glow -->
+            <div id="faceGlow" class="face-glow"></div>
+
+            <!-- Compliments Display -->
+            <div id="complimentText" class="compliment-text"></div>
+
+            <!-- Ring Light Status -->
+            <div id="ringLightStatus" class="ring-light-status">Ring light activated ✨</div>
+
+            <!-- Beauty Mode Status -->
+            <div id="beautyModeStatus" class="beauty-mode-status">Beauty Mode: ON</div>
+
+            <!-- Controls -->
+            <div class="controls-container">
+                <button id="captureBtn" class="control-btn capture-btn" title="Capture Photo">
+                    <span>📷</span>
+                </button>
+                <button id="beautyBtn" class="control-btn beauty-btn active" title="Toggle Beauty Mode">
+                    <span>✨</span>
+                </button>
+                <button id="ringLightBtn" class="control-btn ringlight-btn" title="Toggle Ring Light">
+                    <span>💡</span>
+                </button>
+                <button id="switchCameraBtn" class="control-btn switch-btn" title="Switch Camera">
+                    <span>🔄</span>
+                </button>
+                <button id="closeBtn" class="control-btn close-btn" title="Close Mirror">
+                    <span>✕</span>
+                </button>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="loading-indicator">
+                <div class="loading-spinner"></div>
+                <p>Activating your glow...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Permission Screen -->
+    <div id="permissionScreen" class="screen">
+        <div class="permission-content">
+            <div class="permission-icon">📷</div>
+            <h2>Camera Permission</h2>
+            <p>We need camera access to show your beautiful reflection</p>
+            <button id="permissionBtn" class="permission-button">Grant Permission</button>
+            <button id="permissionBackBtn" class="permission-back-btn">Go Back</button>
+        </div>
+    </div>
+
+    <!-- Browser Support Screen -->
+    <div id="browserScreen" class="screen">
+        <div class="permission-content">
+            <div class="permission-icon">⚠️</div>
+            <h2>Browser Not Supported</h2>
+            <p id="browserMessage">Your browser doesn't support this feature</p>
+            <button id="browserBackBtn" class="permission-back-btn">Go Back</button>
+        </div>
+    </div>
+
+    <!-- No Camera Screen -->
+    <div id="noCameraScreen" class="screen">
+        <div class="permission-content">
+            <div class="permission-icon">📹</div>
+            <h2>No Camera Found</h2>
+            <p>This device doesn't have a camera or it's not accessible</p>
+            <button id="noCameraBackBtn" class="permission-back-btn">Go Back</button>
+        </div>
+    </div>
+
+    <!-- Offline Notification -->
+    <div id="offlineNotification" class="offline-notification hidden">
+        <span>📴 You're offline - Some features may not work</span>
+    </div>
+
+    <!-- Update Notification -->
+    <div id="updateNotification" class="update-notification hidden">
+        <div class="update-content">
+            <span>✨ New version available!</span>
+            <button id="updateBtn" class="update-button">Reload</button>
+        </div>
+    </div>
+
+    <!-- Floating Sparkles -->
+    <div id="sparklesContainer" class="sparkles-container"></div>
+
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js').catch(err => {
+                console.log('Service Worker registration failed:', err);
+            });
+        }
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
