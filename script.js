@@ -311,8 +311,13 @@ async function startCamera() {
             audio: false
         };
 
+        // Add timeout for permission request
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Camera permission timeout')), 10000)
+        );
+
         // Use the getCamera function that works on all browsers
-        state.stream = await getCamera(constraints);
+        state.stream = await Promise.race([getCamera(constraints), timeoutPromise]);
         videoFeed.srcObject = state.stream;
         state.cameraActive = true;
 
@@ -365,6 +370,7 @@ function setupCanvas() {
 function closeMirror() {
     state.cameraActive = false;
     
+    // Properly clean up all video tracks
     if (state.stream) {
         state.stream.getTracks().forEach(track => {
             track.stop();
@@ -374,10 +380,16 @@ function closeMirror() {
 
     videoFeed.srcObject = null;
     
-    // Reset UI
+    // Clean up canvas
+    if (ctx) {
+        ctx.clearRect(0, 0, effectCanvas.width, effectCanvas.height);
+    }
+    
+    // Reset UI and clean up effects
     beautyBtn.classList.add('active');
     ringLightBtn.classList.remove('active');
     ringLight.classList.remove('active');
+    faceGlow.classList.remove('active');
     beautyModeStatus.classList.remove('off');
     state.beautyModeOn = true;
     state.ringLightOn = false;
@@ -389,8 +401,10 @@ async function switchCamera() {
     if (!state.cameraActive) return;
 
     try {
-        // Stop current stream
-        state.stream.getTracks().forEach(track => track.stop());
+        // Stop current stream safely
+        if (state.stream) {
+            state.stream.getTracks().forEach(track => track.stop());
+        }
         
         // Switch facing mode
         state.facingMode = state.facingMode === 'user' ? 'environment' : 'user';
@@ -407,7 +421,12 @@ async function switchCamera() {
             audio: false
         };
 
-        state.stream = await getCamera(constraints);
+        // Add timeout for camera switch
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Camera switch timeout')), 10000)
+        );
+
+        state.stream = await Promise.race([getCamera(constraints), timeoutPromise]);
         videoFeed.srcObject = state.stream;
         
         setTimeout(() => {
@@ -416,6 +435,7 @@ async function switchCamera() {
     } catch (error) {
         console.error('Switch camera error:', error);
         loadingIndicator.classList.add('hidden');
+        // Revert to previous facing mode
         state.facingMode = state.facingMode === 'user' ? 'environment' : 'user';
         alert('Could not switch camera. Your device may not support this.');
     }
@@ -651,14 +671,20 @@ function showCompliment() {
 }
 
 function activateFaceGlow() {
+    // Clear any previous timeouts
+    if (window.faceGlowTimeout) {
+        clearTimeout(window.faceGlowTimeout);
+    }
+
     faceGlow.classList.add('active');
     faceGlow.style.width = '300px';
     faceGlow.style.height = '300px';
 
-    setTimeout(() => {
+    window.faceGlowTimeout = setTimeout(() => {
         faceGlow.classList.remove('active');
         faceGlow.style.width = '0';
         faceGlow.style.height = '0';
+        window.faceGlowTimeout = null;
     }, 2000);
 }
 
@@ -831,12 +857,27 @@ function showFirstTimeMirrorHelp() {
 
 window.addEventListener('error', (event) => {
     console.error('Global error:', event.error);
-    // Don't break the app on unexpected errors
+    // Safely close camera if there's a critical error
+    if (state.cameraActive && event.error) {
+        try {
+            closeMirror();
+        } catch (e) {
+            console.error('Error during emergency close:', e);
+        }
+    }
 });
 
 window.addEventListener('unhandledrejection', (event) => {
     console.error('Unhandled promise rejection:', event.reason);
-    // Don't break the app on unhandled promises
+    // Prevent white screen on unhandled promise rejection
+    event.preventDefault();
+});
+
+// Handle page unload cleanup
+window.addEventListener('beforeunload', () => {
+    if (state.cameraActive && state.stream) {
+        state.stream.getTracks().forEach(track => track.stop());
+    }
 });
 
 // ============================================
