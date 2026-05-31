@@ -50,6 +50,8 @@ const state = {
     cameraActive: false,
     beautyModeOn: true,
     ringLightOn: false,
+    autoRingLightOn: true,
+    softLightMode: true,
     facingMode: 'user',
     stream: null,
     isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
@@ -58,6 +60,9 @@ const state = {
     browserSupported: true,
     cameraAvailable: true,
     isOnline: navigator.onLine,
+    brightness: 100,
+    lastBrightness: 100,
+    frameSkip: state?.isMobile ? 2 : 1,
 };
 
 const compliments = [
@@ -100,7 +105,9 @@ const ctx = effectCanvas ? effectCanvas.getContext('2d', { willReadFrequently: t
 
 const captureBtn = document.getElementById('captureBtn');
 const beautyBtn = document.getElementById('beautyBtn');
+const autoRingLightBtn = document.getElementById('autoRingLightBtn');
 const ringLightBtn = document.getElementById('ringLightBtn');
+const softLightBtn = document.getElementById('softLightBtn');
 const switchCameraBtn = document.getElementById('switchCameraBtn');
 const closeBtn = document.getElementById('closeBtn');
 
@@ -139,7 +146,9 @@ function initializeApp() {
     
     captureBtn.addEventListener('click', capturePhoto);
     beautyBtn.addEventListener('click', toggleBeautyMode);
+    autoRingLightBtn.addEventListener('click', toggleAutoRingLight);
     ringLightBtn.addEventListener('click', toggleRingLight);
+    softLightBtn.addEventListener('click', toggleSoftLight);
     switchCameraBtn.addEventListener('click', switchCamera);
     closeBtn.addEventListener('click', closeMirror);
 
@@ -387,12 +396,16 @@ function closeMirror() {
     
     // Reset UI and clean up effects
     beautyBtn.classList.add('active');
+    autoRingLightBtn.classList.add('active');
     ringLightBtn.classList.remove('active');
+    softLightBtn.classList.add('active');
     ringLight.classList.remove('active');
     faceGlow.classList.remove('active');
     beautyModeStatus.classList.remove('off');
     state.beautyModeOn = true;
     state.ringLightOn = false;
+    state.autoRingLightOn = true;
+    state.softLightMode = true;
     
     showScreen(startScreen);
 }
@@ -447,20 +460,31 @@ async function switchCamera() {
 
 function startMirrorEffects() {
     let frameCount = 0;
+    let skipFrame = 0;
 
     function processFrame() {
         if (!state.cameraActive) return;
 
         try {
             frameCount++;
+            skipFrame++;
 
-            // Apply beauty effects
+            // Skip frames on mobile for better performance
+            if (state.isMobile && skipFrame < state.frameSkip) {
+                requestAnimationFrame(processFrame);
+                return;
+            }
+            skipFrame = 0;
+
+            // Apply beauty effects with frame skipping
             if (state.beautyModeOn) {
                 applyBeautyEffects();
             }
 
             // Auto-detect darkness and activate ring light
-            detectDarknessAndApplyRingLight();
+            if (state.autoRingLightOn) {
+                detectDarknessAndApplyRingLight();
+            }
 
             // Face detection for compliments
             if (frameCount % 30 === 0) {
@@ -488,38 +512,47 @@ function applyBeautyEffects() {
         const width = effectCanvas.width;
         const height = effectCanvas.height;
 
-        // Draw video to canvas
+        // Draw video to canvas with optimized smoothing
         ctx.drawImage(videoFeed, 0, 0, width, height);
 
-        // Apply soft skin smoothing via Gaussian blur
-        ctx.filter = 'blur(2px)';
-        ctx.globalAlpha = 0.95;
+        // Soft skin smoothing - optimized for mobile
+        const smoothAmount = state.isMobile ? 1.5 : 2;
+        ctx.filter = `blur(${smoothAmount}px)`;
+        ctx.globalAlpha = 0.92;
         ctx.drawImage(videoFeed, 0, 0, width, height);
         ctx.globalAlpha = 1;
         ctx.filter = 'none';
 
-        // Enhance contrast and brightness
-        ctx.filter = 'brightness(1.15) contrast(1.1) saturate(0.95)';
-        ctx.globalAlpha = 0.3;
+        // Enhanced brightness and contrast with soft light mode
+        const brightnessMult = state.softLightMode ? 1.1 : 1.15;
+        const contrastMult = state.softLightMode ? 1.08 : 1.1;
+        ctx.filter = `brightness(${brightnessMult}) contrast(${contrastMult}) saturate(0.95)`;
+        ctx.globalAlpha = 0.25;
         ctx.fillStyle = 'rgba(255, 200, 150, 0.1)';
         ctx.fillRect(0, 0, width, height);
         ctx.globalAlpha = 1;
         ctx.filter = 'none';
 
-        // Add subtle warm glow overlay
+        // Add warm glow overlay - soft mode
         const glowGradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height));
-        glowGradient.addColorStop(0, 'rgba(255, 200, 100, 0.1)');
-        glowGradient.addColorStop(1, 'rgba(255, 100, 100, 0)');
         
-        ctx.globalAlpha = 0.15;
+        if (state.softLightMode) {
+            glowGradient.addColorStop(0, 'rgba(255, 220, 120, 0.08)');
+            glowGradient.addColorStop(1, 'rgba(255, 120, 100, 0)');
+        } else {
+            glowGradient.addColorStop(0, 'rgba(255, 200, 100, 0.1)');
+            glowGradient.addColorStop(1, 'rgba(255, 100, 100, 0)');
+        }
+        
+        ctx.globalAlpha = 0.12;
         ctx.fillStyle = glowGradient;
         ctx.fillRect(0, 0, width, height);
         ctx.globalAlpha = 1;
 
-        // Add bloom effect
-        ctx.filter = 'brightness(1.05)';
-        ctx.globalAlpha = 0.1;
-        ctx.drawImage(effectCanvas, -2, -2, width + 4, height + 4);
+        // Subtle bloom effect
+        ctx.filter = 'brightness(1.03)';
+        ctx.globalAlpha = 0.08;
+        ctx.drawImage(effectCanvas, -1, -1, width + 2, height + 2);
         ctx.globalAlpha = 1;
         ctx.filter = 'none';
     } catch (error) {
@@ -538,27 +571,54 @@ function detectDarknessAndApplyRingLight() {
         const imageData = ctx.getImageData(0, 0, width, height);
         const data = imageData.data;
 
-        // Calculate average brightness
+        // Calculate brightness more efficiently
         let brightness = 0;
-        for (let i = 0; i < data.length; i += 4) {
+        let sampleRate = 4; // Sample every 4th pixel for performance
+        let samples = 0;
+        
+        for (let i = 0; i < data.length; i += sampleRate * 4) {
             brightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
+            samples++;
         }
-        brightness = brightness / (width * height);
+        brightness = brightness / samples;
+        state.lastBrightness = state.brightness;
+        state.brightness = brightness;
 
-        // Activate ring light if dark (brightness < 80)
-        if (brightness < 80 && !state.ringLightOn) {
+        // Smooth brightness transitions to avoid flicker
+        const smoothBrightness = (state.brightness + state.lastBrightness) / 2;
+
+        // Adaptive thresholds with hysteresis
+        const darkThreshold = 75;
+        const brightThreshold = 110;
+
+        // Auto ring light with smooth transitions
+        if (smoothBrightness < darkThreshold && !state.ringLightOn && state.autoRingLightOn) {
             enableRingLight();
-        } else if (brightness >= 100 && state.ringLightOn) {
+        } else if (smoothBrightness >= brightThreshold && state.ringLightOn && state.autoRingLightOn) {
             disableRingLight();
         }
 
-        // Apply additional brightness if ring light is on
+        // Apply adaptive brightness boost if ring light is on
         if (state.ringLightOn) {
-            ctx.filter = 'brightness(1.25)';
-            ctx.globalAlpha = 0.5;
+            const boostAmount = state.softLightMode ? 1.15 : 1.25;
+            const boostAlpha = state.softLightMode ? 0.4 : 0.5;
+            
+            ctx.filter = `brightness(${boostAmount})`;
+            ctx.globalAlpha = boostAlpha;
             ctx.drawImage(videoFeed, 0, 0, width, height);
             ctx.globalAlpha = 1;
             ctx.filter = 'none';
+
+            // Add soft light fill
+            if (state.softLightMode) {
+                const softGradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) * 0.7);
+                softGradient.addColorStop(0, 'rgba(255, 240, 200, 0.1)');
+                softGradient.addColorStop(1, 'rgba(255, 200, 150, 0)');
+                ctx.globalAlpha = 0.15;
+                ctx.fillStyle = softGradient;
+                ctx.fillRect(0, 0, width, height);
+                ctx.globalAlpha = 1;
+            }
         }
     } catch (error) {
         console.error('Ring light detection error:', error);
@@ -602,6 +662,20 @@ function toggleBeautyMode() {
         beautyModeStatus.classList.add('off');
         beautyModeStatus.textContent = 'Beauty Mode: OFF';
     }
+}
+
+function toggleAutoRingLight() {
+    state.autoRingLightOn = !state.autoRingLightOn;
+    autoRingLightBtn.classList.toggle('active');
+    
+    if (!state.autoRingLightOn && state.ringLightOn) {
+        disableRingLight();
+    }
+}
+
+function toggleSoftLight() {
+    state.softLightMode = !state.softLightMode;
+    softLightBtn.classList.toggle('active');
 }
 
 // ============================================
