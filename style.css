@@ -295,6 +295,26 @@ html, body {
     background: var(--dark-bg);
 }
 
+/* ============================================
+    MIRROR SCREEN STYLES
+    ============================================ */
+
+#mirrorScreen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mirror-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    background: var(--dark-bg);
+}
+
 .video-feed {
     position: absolute;
     top: 0;
@@ -304,6 +324,8 @@ html, body {
     object-fit: cover;
     transform: scaleX(-1);
     background: var(--dark-bg);
+    will-change: transform;
+    filter: brightness(1.08) contrast(1.06) saturate(0.95);
 }
 
 .effect-canvas {
@@ -313,6 +335,7 @@ html, body {
     width: 100%;
     height: 100%;
     transform: scaleX(-1);
+    will-change: contents;
 }
 
 /* Ring Light Effect */
@@ -481,44 +504,46 @@ html, body {
 /* Controls Container */
 .controls-container {
     position: absolute;
-    bottom: 30px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 15px;
+    gap: 10px;
     align-items: center;
     justify-content: center;
     z-index: 30;
     flex-wrap: wrap;
-    padding: 0 20px;
+    padding: 0 15px;
+    max-width: 100%;
 }
 
 .control-btn {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     border: 2px solid rgba(255, 255, 255, 0.2);
     background: rgba(255, 255, 255, 0.05);
     color: var(--text-white);
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     backdrop-filter: blur(10px);
     box-shadow: 0 8px 32px rgba(255, 20, 147, 0.1);
+    flex-shrink: 0;
 }
 
 .control-btn:hover {
     background: rgba(255, 20, 147, 0.2);
     border-color: rgba(255, 20, 147, 0.5);
-    transform: translateY(-5px);
+    transform: translateY(-3px);
     box-shadow: 0 12px 40px rgba(255, 20, 147, 0.3);
 }
 
 .control-btn:active {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 }
 
 .control-btn.active {
@@ -528,9 +553,9 @@ html, body {
 }
 
 .capture-btn {
-    width: 70px;
-    height: 70px;
-    font-size: 1.8rem;
+    width: 60px;
+    height: 60px;
+    font-size: 1.6rem;
 }
 
 .close-btn {
@@ -798,21 +823,21 @@ html, body {
 
 @media (max-width: 768px) {
     .controls-container {
-        bottom: 20px;
-        gap: 10px;
+        bottom: 18px;
+        gap: 8px;
         justify-content: center;
     }
 
     .control-btn {
-        width: 50px;
-        height: 50px;
-        font-size: 1.2rem;
+        width: 48px;
+        height: 48px;
+        font-size: 1.1rem;
     }
 
     .capture-btn {
-        width: 60px;
-        height: 60px;
-        font-size: 1.5rem;
+        width: 58px;
+        height: 58px;
+        font-size: 1.4rem;
     }
 
     .permission-content {
@@ -820,39 +845,7 @@ html, body {
     }
 
     .compliment-text {
-        font-size: 1.2rem;
-    }
-
-    .beauty-mode-status,
-    .ring-light-status {
-        font-size: 0.75rem;
-        padding: 8px 12px;
-        top: 15px;
-    }
-}
-
-@media (max-width: 480px) {
-    .controls-container {
-        gap: 8px;
-        bottom: 15px;
-        padding: 0 15px;
-    }
-
-    .control-btn {
-        width: 45px;
-        height: 45px;
-        font-size: 1rem;
-    }
-
-    .capture-btn {
-        width: 55px;
-        height: 55px;
-        font-size: 1.3rem;
-    }
-
-    .permission-content {
-        padding: 35px 25px;
-        width: 95%;
+        font-size: 1.1rem;
     }
 
     .beauty-mode-status,
@@ -861,11 +854,96 @@ html, body {
         padding: 6px 12px;
         top: 12px;
         right: 12px;
+        border-radius: 15px;
+    }
+}
+
+@media (max-width: 500px) {
+    body {
+        font-size: 14px;
+    }
+
+    .controls-container {
+        gap: 6px;
+        bottom: 12px;
+        padding: 0 10px;
+    }
+
+    .control-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
+        border: 1.5px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.15s ease;
+    }
+
+    .capture-btn {
+        width: 52px;
+        height: 52px;
+        font-size: 1.2rem;
+    }
+
+    .permission-content {
+        padding: 30px 20px;
+        border-radius: 25px;
+    }
+
+    .permission-icon {
+        font-size: 3.5rem;
+    }
+
+    .permission-content h2 {
+        font-size: 1.5rem;
+    }
+
+    .permission-content p {
+        font-size: 0.9rem;
+    }
+
+    .beauty-mode-status,
+    .ring-light-status {
+        font-size: 0.65rem;
+        padding: 5px 10px;
+        top: 10px;
+        right: 10px;
     }
 
     .compliment-text {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
+        top: 35%;
     }
+
+    .title {
+        font-size: 1.8rem;
+    }
+
+    .subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 30px;
+    }
+
+    .start-button {
+        padding: 12px 25px;
+        font-size: 0.9rem;
+        gap: 8px;
+        border-radius: 40px;
+    }
+
+    .flower {
+        font-size: 1.1rem;
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(255, 20, 147, 0.2);
+        border-top: 3px solid var(--primary-pink);
+    }
+
+    .loading-indicator p {
+        font-size: 0.9rem;
+    }
+}
 
     .title {
         font-size: 2rem;

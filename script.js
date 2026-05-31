@@ -460,40 +460,41 @@ async function switchCamera() {
 
 function startMirrorEffects() {
     let frameCount = 0;
-    let skipFrame = 0;
 
     function processFrame() {
         if (!state.cameraActive) return;
 
         try {
             frameCount++;
-            skipFrame++;
 
-            // Skip frames on mobile for better performance
-            if (state.isMobile && skipFrame < state.frameSkip) {
-                requestAnimationFrame(processFrame);
-                return;
-            }
-            skipFrame = 0;
+            // On mobile, skip most processing - use CSS filters instead
+            if (state.isMobile) {
+                // Only do brightness detection on mobile (skip face detection too)
+                if (frameCount % 60 === 0 && state.autoRingLightOn) {
+                    detectDarknessAndApplyRingLight();
+                }
+                
+                // Add sparkles occasionally
+                if (frameCount % 120 === 0 && Math.random() > 0.8) {
+                    createSparkle();
+                }
+            } else {
+                // Desktop: apply all effects
+                if (state.beautyModeOn) {
+                    applyBeautyEffects();
+                }
 
-            // Apply beauty effects with frame skipping
-            if (state.beautyModeOn) {
-                applyBeautyEffects();
-            }
+                if (state.autoRingLightOn) {
+                    detectDarknessAndApplyRingLight();
+                }
 
-            // Auto-detect darkness and activate ring light
-            if (state.autoRingLightOn) {
-                detectDarknessAndApplyRingLight();
-            }
+                if (frameCount % 30 === 0) {
+                    detectFaceAndShowCompliment();
+                }
 
-            // Face detection for compliments
-            if (frameCount % 30 === 0) {
-                detectFaceAndShowCompliment();
-            }
-
-            // Add sparkles occasionally
-            if (frameCount % 100 === 0 && Math.random() > 0.7) {
-                createSparkle();
+                if (frameCount % 100 === 0 && Math.random() > 0.7) {
+                    createSparkle();
+                }
             }
         } catch (error) {
             console.error('Frame processing error:', error);
@@ -512,49 +513,21 @@ function applyBeautyEffects() {
         const width = effectCanvas.width;
         const height = effectCanvas.height;
 
-        // Draw video to canvas with optimized smoothing
+        // Draw video once with all filters applied
+        ctx.filter = `blur(1px) brightness(1.1) contrast(1.08) saturate(0.95)`;
         ctx.drawImage(videoFeed, 0, 0, width, height);
-
-        // Soft skin smoothing - optimized for mobile
-        const smoothAmount = state.isMobile ? 1.5 : 2;
-        ctx.filter = `blur(${smoothAmount}px)`;
-        ctx.globalAlpha = 0.92;
-        ctx.drawImage(videoFeed, 0, 0, width, height);
-        ctx.globalAlpha = 1;
         ctx.filter = 'none';
 
-        // Enhanced brightness and contrast with soft light mode
-        const brightnessMult = state.softLightMode ? 1.1 : 1.15;
-        const contrastMult = state.softLightMode ? 1.08 : 1.1;
-        ctx.filter = `brightness(${brightnessMult}) contrast(${contrastMult}) saturate(0.95)`;
-        ctx.globalAlpha = 0.25;
-        ctx.fillStyle = 'rgba(255, 200, 150, 0.1)';
-        ctx.fillRect(0, 0, width, height);
-        ctx.globalAlpha = 1;
-        ctx.filter = 'none';
-
-        // Add warm glow overlay - soft mode
-        const glowGradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height));
+        // Minimal overlay - lighter computation
+        const glowGradient = ctx.createRadialGradient(width / 2, height / 2, width * 0.3, width / 2, height / 2, Math.max(width, height));
+        glowGradient.addColorStop(0, 'rgba(255, 220, 120, 0.05)');
+        glowGradient.addColorStop(1, 'rgba(255, 150, 100, 0)');
         
-        if (state.softLightMode) {
-            glowGradient.addColorStop(0, 'rgba(255, 220, 120, 0.08)');
-            glowGradient.addColorStop(1, 'rgba(255, 120, 100, 0)');
-        } else {
-            glowGradient.addColorStop(0, 'rgba(255, 200, 100, 0.1)');
-            glowGradient.addColorStop(1, 'rgba(255, 100, 100, 0)');
-        }
-        
-        ctx.globalAlpha = 0.12;
+        ctx.globalAlpha = 0.1;
         ctx.fillStyle = glowGradient;
         ctx.fillRect(0, 0, width, height);
         ctx.globalAlpha = 1;
 
-        // Subtle bloom effect
-        ctx.filter = 'brightness(1.03)';
-        ctx.globalAlpha = 0.08;
-        ctx.drawImage(effectCanvas, -1, -1, width + 2, height + 2);
-        ctx.globalAlpha = 1;
-        ctx.filter = 'none';
     } catch (error) {
         console.error('Beauty effects error:', error);
     }
@@ -567,58 +540,38 @@ function detectDarknessAndApplyRingLight() {
         const width = effectCanvas.width;
         const height = effectCanvas.height;
 
-        // Get image data from canvas
+        // Get image data ONCE and sample efficiently
         const imageData = ctx.getImageData(0, 0, width, height);
         const data = imageData.data;
 
-        // Calculate brightness more efficiently
+        // Sample every 16th pixel for blazing fast detection
         let brightness = 0;
-        let sampleRate = 4; // Sample every 4th pixel for performance
         let samples = 0;
         
-        for (let i = 0; i < data.length; i += sampleRate * 4) {
+        for (let i = 0; i < data.length; i += 64) { // Every 16th pixel
             brightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
             samples++;
         }
         brightness = brightness / samples;
+
+        // Smooth transitions
         state.lastBrightness = state.brightness;
-        state.brightness = brightness;
+        state.brightness = (brightness * 0.7 + state.brightness * 0.3); // Smoother blend
 
-        // Smooth brightness transitions to avoid flicker
-        const smoothBrightness = (state.brightness + state.lastBrightness) / 2;
-
-        // Adaptive thresholds with hysteresis
-        const darkThreshold = 75;
-        const brightThreshold = 110;
-
-        // Auto ring light with smooth transitions
-        if (smoothBrightness < darkThreshold && !state.ringLightOn && state.autoRingLightOn) {
+        // Simple hysteresis: avoid flickering
+        if (state.brightness < 70 && !state.ringLightOn && state.autoRingLightOn) {
             enableRingLight();
-        } else if (smoothBrightness >= brightThreshold && state.ringLightOn && state.autoRingLightOn) {
+        } else if (state.brightness > 115 && state.ringLightOn && state.autoRingLightOn) {
             disableRingLight();
         }
 
-        // Apply adaptive brightness boost if ring light is on
+        // Apply single brightness boost if ring light is on
         if (state.ringLightOn) {
-            const boostAmount = state.softLightMode ? 1.15 : 1.25;
-            const boostAlpha = state.softLightMode ? 0.4 : 0.5;
-            
-            ctx.filter = `brightness(${boostAmount})`;
-            ctx.globalAlpha = boostAlpha;
+            ctx.filter = 'brightness(1.2)';
+            ctx.globalAlpha = 0.4;
             ctx.drawImage(videoFeed, 0, 0, width, height);
             ctx.globalAlpha = 1;
             ctx.filter = 'none';
-
-            // Add soft light fill
-            if (state.softLightMode) {
-                const softGradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) * 0.7);
-                softGradient.addColorStop(0, 'rgba(255, 240, 200, 0.1)');
-                softGradient.addColorStop(1, 'rgba(255, 200, 150, 0)');
-                ctx.globalAlpha = 0.15;
-                ctx.fillStyle = softGradient;
-                ctx.fillRect(0, 0, width, height);
-                ctx.globalAlpha = 1;
-            }
         }
     } catch (error) {
         console.error('Ring light detection error:', error);
