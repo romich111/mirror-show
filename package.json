@@ -1,0 +1,32 @@
+{
+  "name": "mirror-show",
+  "version": "1.0.0",
+  "description": "Premium beauty mirror app with real mirror effects",
+  "main": "script.js",
+  "scripts": {
+    "build": "echo 'Build complete'",
+    "sync": "cap sync android",
+    "open:android": "cap open android"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/romich111/mirror-show.git"
+  },
+  "keywords": [
+    "mirror",
+    "beauty",
+    "selfie",
+    "camera"
+  ],
+  "author": "Mirror Show",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/romich111/mirror-show/issues"
+  },
+  "homepage": "https://github.com/romich111/mirror-show#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4"
+  }
+}

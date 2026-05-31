@@ -1,0 +1,13 @@
+{
+  "appId": "com.mirrorshow.app",
+  "appName": "Mirror Show",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  }
+}
