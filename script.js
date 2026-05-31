@@ -52,6 +52,8 @@ const state = {
     ringLightOn: false,
     autoRingLightOn: true,
     softLightMode: true,
+    realMirrorMode: true,
+    beautyLevel: 50,
     facingMode: 'user',
     stream: null,
     isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
@@ -62,7 +64,7 @@ const state = {
     isOnline: navigator.onLine,
     brightness: 100,
     lastBrightness: 100,
-    frameSkip: state?.isMobile ? 2 : 1,
+    frameSkip: 1,
 };
 
 const compliments = [
@@ -116,11 +118,15 @@ const faceGlow = document.getElementById('faceGlow');
 const complimentText = document.getElementById('complimentText');
 const ringLightStatus = document.getElementById('ringLightStatus');
 const beautyModeStatus = document.getElementById('beautyModeStatus');
+const mirrorStatus = document.getElementById('mirrorStatus');
 const loadingIndicator = document.getElementById('loadingIndicator');
 const sparklesContainer = document.getElementById('sparklesContainer');
 const offlineNotification = document.getElementById('offlineNotification');
 const updateNotification = document.getElementById('updateNotification');
 const updateBtn = document.getElementById('updateBtn');
+const beautySlider = document.getElementById('beautySlider');
+const beautyLevelInput = document.getElementById('beautyLevel');
+const beautyValue = document.getElementById('beautyValue');
 
 // ============================================
 // Initialization
@@ -151,6 +157,14 @@ function initializeApp() {
     softLightBtn.addEventListener('click', toggleSoftLight);
     switchCameraBtn.addEventListener('click', switchCamera);
     closeBtn.addEventListener('click', closeMirror);
+
+    // Beauty slider
+    if (beautyLevelInput) {
+        beautyLevelInput.addEventListener('input', (e) => {
+            state.beautyLevel = parseInt(e.target.value);
+            beautyValue.textContent = state.beautyLevel + '%';
+        });
+    }
 
     updateBtn.addEventListener('click', () => {
         window.location.reload();
@@ -394,6 +408,11 @@ function closeMirror() {
         ctx.clearRect(0, 0, effectCanvas.width, effectCanvas.height);
     }
     
+    // Hide beauty slider
+    if (beautySlider) {
+        beautySlider.classList.add('hidden');
+    }
+    
     // Reset UI and clean up effects
     beautyBtn.classList.add('active');
     autoRingLightBtn.classList.add('active');
@@ -406,6 +425,9 @@ function closeMirror() {
     state.ringLightOn = false;
     state.autoRingLightOn = true;
     state.softLightMode = true;
+    state.beautyLevel = 50;
+    if (beautyLevelInput) beautyLevelInput.value = 50;
+    if (beautyValue) beautyValue.textContent = '50%';
     
     showScreen(startScreen);
 }
@@ -461,6 +483,11 @@ async function switchCamera() {
 function startMirrorEffects() {
     let frameCount = 0;
 
+    // Show beauty slider on desktop
+    if (!state.isMobile && beautySlider) {
+        beautySlider.classList.remove('hidden');
+    }
+
     function processFrame() {
         if (!state.cameraActive) return;
 
@@ -512,21 +539,57 @@ function applyBeautyEffects() {
     try {
         const width = effectCanvas.width;
         const height = effectCanvas.height;
+        const beautyIntensity = state.beautyLevel / 100;
 
-        // Draw video once with all filters applied
-        ctx.filter = `blur(1px) brightness(1.1) contrast(1.08) saturate(0.95)`;
+        // Base draw with real mirror enhancement
         ctx.drawImage(videoFeed, 0, 0, width, height);
+
+        // STEP 1: Skin smoothing and dermabrasion effect
+        ctx.filter = `blur(${1 + beautyIntensity * 1.5}px)`;
+        ctx.globalAlpha = 0.7 + beautyIntensity * 0.25;
+        ctx.drawImage(videoFeed, 0, 0, width, height);
+        ctx.globalAlpha = 1;
         ctx.filter = 'none';
 
-        // Minimal overlay - lighter computation
+        // STEP 2: Brightness and contrast with beauty level
+        const brightBoost = 1.08 + beautyIntensity * 0.12;
+        const contrastBoost = 1.06 + beautyIntensity * 0.1;
+        ctx.filter = `brightness(${brightBoost}) contrast(${contrastBoost}) saturate(0.98)`;
+        ctx.globalAlpha = 0.15 + beautyIntensity * 0.2;
+        ctx.fillStyle = 'rgba(255, 220, 150, 0.1)';
+        ctx.fillRect(0, 0, width, height);
+        ctx.globalAlpha = 1;
+        ctx.filter = 'none';
+
+        // STEP 3: Skin tone enhancement (warm glow)
         const glowGradient = ctx.createRadialGradient(width / 2, height / 2, width * 0.3, width / 2, height / 2, Math.max(width, height));
-        glowGradient.addColorStop(0, 'rgba(255, 220, 120, 0.05)');
+        glowGradient.addColorStop(0, `rgba(255, ${220 + beautyIntensity * 20}, ${120 + beautyIntensity * 30}, ${0.06 + beautyIntensity * 0.08})`);
         glowGradient.addColorStop(1, 'rgba(255, 150, 100, 0)');
         
-        ctx.globalAlpha = 0.1;
+        ctx.globalAlpha = 0.1 + beautyIntensity * 0.12;
         ctx.fillStyle = glowGradient;
         ctx.fillRect(0, 0, width, height);
         ctx.globalAlpha = 1;
+
+        // STEP 4: Face area brightening and eye enhancement
+        if (beautyIntensity > 0.3) {
+            // Brighten face center more (where face typically is)
+            const faceGradient = ctx.createRadialGradient(width / 2, height * 0.4, 80, width / 2, height * 0.4, 250);
+            faceGradient.addColorStop(0, `rgba(255, 255, 255, ${beautyIntensity * 0.15})`);
+            faceGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            
+            ctx.globalAlpha = 0.6;
+            ctx.fillStyle = faceGradient;
+            ctx.fillRect(0, 0, width, height);
+            ctx.globalAlpha = 1;
+        }
+
+        // STEP 5: Highlights and luminosity mask
+        ctx.filter = `brightness(${1 + beautyIntensity * 0.08})`;
+        ctx.globalAlpha = beautyIntensity * 0.08;
+        ctx.drawImage(effectCanvas, 0, 0, width, height);
+        ctx.globalAlpha = 1;
+        ctx.filter = 'none';
 
     } catch (error) {
         console.error('Beauty effects error:', error);
