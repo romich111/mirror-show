@@ -551,7 +551,131 @@ html, body {
     pointer-events: none;
 }
 
-/* Makeup Studio Panel */
+/* Nail Art Studio Panel */
+.nail-panel {
+    position: absolute;
+    bottom: 100px;
+    left: 20px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    padding: 20px;
+    backdrop-filter: blur(20px);
+    z-index: 35;
+    max-width: 280px;
+    max-height: 600px;
+    overflow-y: auto;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.nail-panel.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.nail-section {
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nail-section label {
+    display: block;
+    color: var(--text-light);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.nail-color-option {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    margin: 4px;
+}
+
+.nail-color-option:hover {
+    transform: scale(1.15);
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
+}
+
+.nail-color-option.selected {
+    border-color: var(--primary-pink);
+    box-shadow: 0 0 12px rgba(255, 20, 147, 0.6);
+    transform: scale(1.2);
+}
+
+.nail-design-grid,
+.nail-shape-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.design-option,
+.shape-option {
+    padding: 10px;
+    background: rgba(255, 20, 147, 0.1);
+    border: 1px solid rgba(255, 20, 147, 0.3);
+    color: var(--text-light);
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.design-option:hover,
+.shape-option:hover {
+    background: rgba(255, 20, 147, 0.2);
+    border-color: rgba(255, 20, 147, 0.6);
+    color: var(--text-white);
+}
+
+.design-option.selected,
+.shape-option.selected {
+    background: linear-gradient(135deg, var(--primary-pink), var(--glow-pink));
+    border-color: var(--primary-pink);
+    color: var(--text-white);
+    box-shadow: 0 4px 12px rgba(255, 20, 147, 0.4);
+}
+
+.nail-preview {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.nail-preview p {
+    color: var(--text-light);
+    font-size: 0.8rem;
+    margin: 0 0 8px 0;
+}
+
+.nails-preview-box {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+
+.nail-preview-item {
+    width: 25px;
+    height: 40px;
+    background: var(--dark-bg);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+}
 .makeup-panel {
     position: absolute;
     bottom: 100px;
@@ -1147,6 +1271,14 @@ html, body {
         bottom: 80px;
         right: 10px;
         left: 10px;
+        max-width: none;
+        max-height: 400px;
+    }
+
+    .nail-panel {
+        bottom: 80px;
+        left: 10px;
+        right: auto;
         max-width: none;
         max-height: 400px;
     }

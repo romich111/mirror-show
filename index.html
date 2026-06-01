@@ -88,7 +88,65 @@
                 <span id="beautyValue">50%</span>
             </div>
 
-            <!-- Makeup Studio Panel -->
+            <!-- Nail Art Studio Panel -->
+            <div id="nailPanel" class="nail-panel hidden">
+                <div class="panel-header">
+                    <h3>💅 Nail Art Studio</h3>
+                    <button class="close-panel" onclick="closeNailPanel()">✕</button>
+                </div>
+                
+                <div class="nail-section">
+                    <label>💅 Nail Color</label>
+                    <div class="color-grid" id="nailColors">
+                        <div class="nail-color-option" style="background: #FF1493;" data-color="#FF1493" title="Hot Pink"></div>
+                        <div class="nail-color-option" style="background: #FF69B4;" data-color="#FF69B4" title="Pink"></div>
+                        <div class="nail-color-option" style="background: #FFB6C1;" data-color="#FFB6C1" title="Light Pink"></div>
+                        <div class="nail-color-option" style="background: #FF0000;" data-color="#FF0000" title="Red"></div>
+                        <div class="nail-color-option" style="background: #DC143C;" data-color="#DC143C" title="Crimson"></div>
+                        <div class="nail-color-option" style="background: #8B0000;" data-color="#8B0000" title="Dark Red"></div>
+                        <div class="nail-color-option" style="background: #FFD700;" data-color="#FFD700" title="Gold"></div>
+                        <div class="nail-color-option" style="background: #C0C0C0;" data-color="#C0C0C0" title="Silver"></div>
+                        <div class="nail-color-option" style="background: #800080;" data-color="#800080" title="Purple"></div>
+                        <div class="nail-color-option" style="background: #000000;" data-color="#000000" title="Black"></div>
+                    </div>
+                </div>
+
+                <div class="nail-section">
+                    <label>✨ Design</label>
+                    <div class="nail-design-grid" id="nailDesigns">
+                        <button class="design-option" data-design="solid" title="Solid Color">Solid</button>
+                        <button class="design-option" data-design="glitter" title="Glitter">✨ Glitter</button>
+                        <button class="design-option" data-design="matte" title="Matte">Matte</button>
+                        <button class="design-option" data-design="metallic" title="Metallic">Metallic</button>
+                        <button class="design-option" data-design="French" title="French Tip">French 💅</button>
+                        <button class="design-option" data-design="gradient" title="Gradient">Gradient</button>
+                    </div>
+                </div>
+
+                <div class="nail-section">
+                    <label>📏 Shape</label>
+                    <div class="nail-shape-grid" id="nailShapes">
+                        <button class="shape-option" data-shape="round" title="Round">Round</button>
+                        <button class="shape-option" data-shape="almond" title="Almond">Almond</button>
+                        <button class="shape-option" data-shape="coffin" title="Coffin">Coffin</button>
+                        <button class="shape-option" data-shape="square" title="Square">Square</button>
+                    </div>
+                </div>
+
+                <div class="nail-preview">
+                    <p>Your Nails Preview:</p>
+                    <div class="nails-preview-box">
+                        <div class="nail-preview-item"></div>
+                        <div class="nail-preview-item"></div>
+                        <div class="nail-preview-item"></div>
+                        <div class="nail-preview-item"></div>
+                        <div class="nail-preview-item"></div>
+                    </div>
+                </div>
+
+                <button id="resetNails" class="panel-btn">Reset Nails</button>
+                <button id="saveNails" class="panel-btn primary">Save Design 💾</button>
+            </div>
             <div id="makeupPanel" class="makeup-panel hidden">
                 <div class="panel-header">
                     <h3>💄 Makeup Studio</h3>

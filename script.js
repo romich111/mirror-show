@@ -130,6 +130,7 @@ const beautyValue = document.getElementById('beautyValue');
 const makeupPanel = document.getElementById('makeupPanel');
 const makeupBtn = document.getElementById('makeupBtn');
 const nailBtn = document.getElementById('nailBtn');
+const nailPanel = document.getElementById('nailPanel');
 const hairBtn = document.getElementById('hairBtn');
 
 // Makeup state
@@ -140,6 +141,13 @@ const makeup = {
     eyeIntensity: 50,
     blushColor: '#FFB6C1',
     blushIntensity: 40,
+};
+
+// Nail art state
+const nails = {
+    color: '#FF1493',
+    design: 'solid',
+    shape: 'almond',
 };
 
 // ============================================
@@ -261,6 +269,74 @@ function initializeApp() {
                 const look = JSON.parse(JSON.stringify(makeup));
                 localStorage.setItem(`makeup_${Date.now()}`, JSON.stringify(look));
                 alert(`💄 "${lookName}" saved!`);
+            }
+        });
+    }
+
+    // Nail art button
+    if (nailBtn) {
+        nailBtn.addEventListener('click', () => {
+            if (nailPanel.classList.contains('hidden')) {
+                nailPanel.classList.remove('hidden');
+                setupNailColorPickers();
+            } else {
+                nailPanel.classList.add('hidden');
+            }
+        });
+    }
+
+    // Nail color selection
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.nail-color-option')) {
+            const option = e.target.closest('.nail-color-option');
+            const color = option.getAttribute('data-color');
+            
+            nails.color = color;
+            document.querySelectorAll('.nail-color-option').forEach(el => el.classList.remove('selected'));
+            option.classList.add('selected');
+            updateNailPreview();
+        }
+    });
+
+    // Nail design and shape selection
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.design-option')) {
+            const btn = e.target.closest('.design-option');
+            nails.design = btn.getAttribute('data-design');
+            document.querySelectorAll('.design-option').forEach(el => el.classList.remove('selected'));
+            btn.classList.add('selected');
+            updateNailPreview();
+        }
+        if (e.target.closest('.shape-option')) {
+            const btn = e.target.closest('.shape-option');
+            nails.shape = btn.getAttribute('data-shape');
+            document.querySelectorAll('.shape-option').forEach(el => el.classList.remove('selected'));
+            btn.classList.add('selected');
+            updateNailPreview();
+        }
+    });
+
+    // Reset and Save nails
+    const resetNailsBtn = document.getElementById('resetNails');
+    const saveNailsBtn = document.getElementById('saveNails');
+
+    if (resetNailsBtn) {
+        resetNailsBtn.addEventListener('click', () => {
+            nails.color = '#FF1493';
+            nails.design = 'solid';
+            nails.shape = 'almond';
+            setupNailColorPickers();
+            updateNailPreview();
+        });
+    }
+
+    if (saveNailsBtn) {
+        saveNailsBtn.addEventListener('click', () => {
+            const designName = prompt('Save nail design as:', 'My Nails');
+            if (designName) {
+                const design = JSON.parse(JSON.stringify(nails));
+                localStorage.setItem(`nails_${Date.now()}`, JSON.stringify(design));
+                alert(`💅 "${designName}" saved!`);
             }
         });
     }
@@ -536,6 +612,11 @@ function closeMirror() {
     // Hide makeup panel
     if (makeupPanel) {
         makeupPanel.classList.add('hidden');
+    }
+
+    // Hide nail panel
+    if (nailPanel) {
+        nailPanel.classList.add('hidden');
     }
     
     // Reset UI and clean up effects
@@ -1121,6 +1202,59 @@ function setupMakeupColorPickers() {
 
 function closeMakeupPanel() {
     makeupPanel.classList.add('hidden');
+}
+
+function closeNailPanel() {
+    nailPanel.classList.add('hidden');
+}
+
+function setupNailColorPickers() {
+    // Select default colors and options
+    document.querySelectorAll('.nail-color-option').forEach((el, i) => {
+        if (i === 0) el.classList.add('selected');
+        else el.classList.remove('selected');
+    });
+    document.querySelectorAll('.design-option').forEach((el) => {
+        if (el.getAttribute('data-design') === 'solid') el.classList.add('selected');
+        else el.classList.remove('selected');
+    });
+    document.querySelectorAll('.shape-option').forEach((el) => {
+        if (el.getAttribute('data-shape') === 'almond') el.classList.add('selected');
+        else el.classList.remove('selected');
+    });
+    updateNailPreview();
+}
+
+function updateNailPreview() {
+    const previewItems = document.querySelectorAll('.nail-preview-item');
+    previewItems.forEach(item => {
+        item.style.background = nails.color;
+        item.style.opacity = '0.8';
+        
+        // Apply design effects
+        if (nails.design === 'glitter') {
+            item.style.boxShadow = `0 0 8px ${nails.color}, inset 0 0 4px rgba(255,255,255,0.5)`;
+        } else if (nails.design === 'matte') {
+            item.style.filter = 'none';
+        } else if (nails.design === 'metallic') {
+            item.style.boxShadow = `inset -2px -2px 4px rgba(0,0,0,0.3), inset 2px 2px 4px rgba(255,255,255,0.3)`;
+        } else if (nails.design === 'French') {
+            item.style.background = `linear-gradient(to bottom, ${nails.color} 80%, white 80%)`;
+        } else if (nails.design === 'gradient') {
+            item.style.background = `linear-gradient(135deg, ${nails.color}, rgba(255,255,255,0.3))`;
+        }
+        
+        // Apply shape
+        if (nails.shape === 'coffin') {
+            item.style.borderRadius = '2px 2px 6px 6px';
+        } else if (nails.shape === 'square') {
+            item.style.borderRadius = '2px';
+        } else if (nails.shape === 'round') {
+            item.style.borderRadius = '8px';
+        } else {
+            item.style.borderRadius = '2px 2px 8px 8px'; // almond
+        }
+    });
 }
 
 function applyMakeupEffects() {
