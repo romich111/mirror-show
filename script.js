@@ -386,8 +386,29 @@ function handleCameraError(error) {
 function setupCanvas() {
     if (!effectCanvas || !videoFeed.videoWidth) return;
 
-    effectCanvas.width = videoFeed.videoWidth;
-    effectCanvas.height = videoFeed.videoHeight;
+    const maxWidth = 1280;
+    const maxHeight = 720;
+    const aspectRatio = videoFeed.videoWidth / videoFeed.videoHeight;
+    let width = videoFeed.videoWidth;
+    let height = videoFeed.videoHeight;
+
+    if (width > maxWidth) {
+        width = maxWidth;
+        height = Math.round(maxWidth / aspectRatio);
+    }
+
+    if (height > maxHeight) {
+        height = maxHeight;
+        width = Math.round(maxHeight * aspectRatio);
+    }
+
+    if (state.isMobile) {
+        width = Math.round(width * 0.75);
+        height = Math.round(height * 0.75);
+    }
+
+    effectCanvas.width = width;
+    effectCanvas.height = height;
 }
 
 function closeMirror() {
@@ -482,6 +503,9 @@ async function switchCamera() {
 
 function startMirrorEffects() {
     let frameCount = 0;
+    let lastFrameTime = performance.now();
+    const targetFrameRate = state.isMobile ? 24 : 30;
+    const frameInterval = 1000 / targetFrameRate;
 
     // Show beauty slider on desktop
     if (!state.isMobile && beautySlider) {
@@ -494,31 +518,24 @@ function startMirrorEffects() {
         try {
             frameCount++;
 
-            // On mobile, skip most processing - use CSS filters instead
             if (state.isMobile) {
-                // Only do brightness detection on mobile (skip face detection too)
-                if (frameCount % 60 === 0 && state.autoRingLightOn) {
+                updateVideoFilter();
+                if (frameCount % 90 === 0 && state.autoRingLightOn) {
                     detectDarknessAndApplyRingLight();
                 }
-                
-                // Add sparkles occasionally
-                if (frameCount % 120 === 0 && Math.random() > 0.8) {
+                if (frameCount % 140 === 0 && Math.random() > 0.75) {
                     createSparkle();
                 }
             } else {
-                // Desktop: apply all effects
-                if (state.beautyModeOn) {
+                if (state.beautyModeOn && frameCount % 2 === 0) {
                     applyBeautyEffects();
                 }
-
-                if (state.autoRingLightOn) {
+                if (frameCount % 45 === 0 && state.autoRingLightOn) {
                     detectDarknessAndApplyRingLight();
                 }
-
-                if (frameCount % 30 === 0) {
+                if (frameCount % 60 === 0) {
                     detectFaceAndShowCompliment();
                 }
-
                 if (frameCount % 100 === 0 && Math.random() > 0.7) {
                     createSparkle();
                 }
@@ -594,6 +611,16 @@ function applyBeautyEffects() {
     } catch (error) {
         console.error('Beauty effects error:', error);
     }
+}
+
+function updateVideoFilter() {
+    if (!videoFeed) return;
+
+    const beautyIntensity = state.beautyLevel / 100;
+    const brightness = state.softLightMode ? 1.05 + beautyIntensity * 0.05 : 1.0;
+    const contrast = state.softLightMode ? 1.04 : 1.02;
+    const saturation = state.softLightMode ? 0.98 + beautyIntensity * 0.02 : 0.96;
+    videoFeed.style.filter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturation})`;
 }
 
 function detectDarknessAndApplyRingLight() {
