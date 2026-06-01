@@ -88,6 +88,69 @@
                 <span id="beautyValue">50%</span>
             </div>
 
+            <!-- Makeup Studio Panel -->
+            <div id="makeupPanel" class="makeup-panel hidden">
+                <div class="panel-header">
+                    <h3>💄 Makeup Studio</h3>
+                    <button class="close-panel" onclick="closeMakeupPanel()">✕</button>
+                </div>
+                
+                <div class="makeup-section">
+                    <label>💋 Lip Color</label>
+                    <div class="color-grid" id="lipColors">
+                        <div class="color-option" style="background: #FF1493;" data-color="#FF1493" title="Hot Pink"></div>
+                        <div class="color-option" style="background: #FF69B4;" data-color="#FF69B4" title="Pink"></div>
+                        <div class="color-option" style="background: #FF0000;" data-color="#FF0000" title="Red"></div>
+                        <div class="color-option" style="background: #DC143C;" data-color="#DC143C" title="Crimson"></div>
+                        <div class="color-option" style="background: #8B0000;" data-color="#8B0000" title="Dark Red"></div>
+                        <div class="color-option" style="background: #D2691E;" data-color="#D2691E" title="Nude"></div>
+                        <div class="color-option" style="background: #CD853F;" data-color="#CD853F" title="Tan"></div>
+                        <div class="color-option" style="background: #A0522D;" data-color="#A0522D" title="Brown"></div>
+                        <div class="color-option" style="background: #800080;" data-color="#800080" title="Purple"></div>
+                        <div class="color-option" style="background: #FFB6C1;" data-color="#FFB6C1" title="Light Pink"></div>
+                    </div>
+                    <label class="intensity-label">Intensity</label>
+                    <input type="range" id="lipIntensity" min="0" max="100" value="60" class="intensity-slider">
+                </div>
+
+                <div class="makeup-section">
+                    <label>👁️ Eye Shadow</label>
+                    <div class="color-grid" id="eyeColors">
+                        <div class="color-option" style="background: #FFD700;" data-color="#FFD700" title="Gold"></div>
+                        <div class="color-option" style="background: #DEB887;" data-color="#DEB887" title="Beige"></div>
+                        <div class="color-option" style="background: #8B4513;" data-color="#8B4513" title="Brown"></div>
+                        <div class="color-option" style="background: #556B2F;" data-color="#556B2F" title="Olive"></div>
+                        <div class="color-option" style="background: #006666;" data-color="#006666" title="Teal"></div>
+                        <div class="color-option" style="background: #4B0082;" data-color="#4B0082" title="Indigo"></div>
+                        <div class="color-option" style="background: #9932CC;" data-color="#9932CC" title="Purple"></div>
+                        <div class="color-option" style="background: #000000;" data-color="#000000" title="Black"></div>
+                        <div class="color-option" style="background: #C0C0C0;" data-color="#C0C0C0" title="Silver"></div>
+                        <div class="color-option" style="background: #FFD700;" data-color="#FFD700" title="Shimmer"></div>
+                    </div>
+                    <label class="intensity-label">Intensity</label>
+                    <input type="range" id="eyeIntensity" min="0" max="100" value="50" class="intensity-slider">
+                </div>
+
+                <div class="makeup-section">
+                    <label>🌹 Blush Color</label>
+                    <div class="color-grid" id="blushColors">
+                        <div class="color-option" style="background: #FFB6C1;" data-color="#FFB6C1" title="Light Pink"></div>
+                        <div class="color-option" style="background: #FF69B4;" data-color="#FF69B4" title="Hot Pink"></div>
+                        <div class="color-option" style="background: #FF1493;" data-color="#FF1493" title="Deep Pink"></div>
+                        <div class="color-option" style="background: #FFB347;" data-color="#FFB347" title="Peach"></div>
+                        <div class="color-option" style="background: #FF6347;" data-color="#FF6347" title="Tomato"></div>
+                        <div class="color-option" style="background: #FFA07A;" data-color="#FFA07A" title="Salmon"></div>
+                        <div class="color-option" style="background: #DB7093;" data-color="#DB7093" title="Plum"></div>
+                        <div class="color-option" style="background: #FFB6C1;" data-color="#FFB6C1" title="Rose"></div>
+                    </div>
+                    <label class="intensity-label">Intensity</label>
+                    <input type="range" id="blushIntensity" min="0" max="100" value="40" class="intensity-slider">
+                </div>
+
+                <button id="resetMakeup" class="panel-btn">Reset Makeup</button>
+                <button id="saveMakeup" class="panel-btn primary">Save Look 💾</button>
+            </div>
+
             <!-- Real Mirror Status -->
             <div id="mirrorStatus" class="mirror-status">Real Mirror Mode ON ✨</div>
 
@@ -107,6 +170,15 @@
                 </button>
                 <button id="softLightBtn" class="control-btn soft-light-btn active" title="Soft Light Mode">
                     <span>🌸</span>
+                </button>
+                <button id="makeupBtn" class="control-btn makeup-btn" title="Makeup Studio">
+                    <span>💄</span>
+                </button>
+                <button id="nailBtn" class="control-btn nail-btn" title="Nail Art">
+                    <span>💅</span>
+                </button>
+                <button id="hairBtn" class="control-btn hair-btn" title="Hairstyles">
+                    <span>💇‍♀️</span>
                 </button>
                 <button id="switchCameraBtn" class="control-btn switch-btn" title="Switch Camera">
                     <span>🔄</span>

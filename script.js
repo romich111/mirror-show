@@ -127,6 +127,20 @@ const updateBtn = document.getElementById('updateBtn');
 const beautySlider = document.getElementById('beautySlider');
 const beautyLevelInput = document.getElementById('beautyLevel');
 const beautyValue = document.getElementById('beautyValue');
+const makeupPanel = document.getElementById('makeupPanel');
+const makeupBtn = document.getElementById('makeupBtn');
+const nailBtn = document.getElementById('nailBtn');
+const hairBtn = document.getElementById('hairBtn');
+
+// Makeup state
+const makeup = {
+    lipColor: '#FF1493',
+    lipIntensity: 60,
+    eyeColor: '#FFD700',
+    eyeIntensity: 50,
+    blushColor: '#FFB6C1',
+    blushIntensity: 40,
+};
 
 // ============================================
 // Initialization
@@ -163,6 +177,91 @@ function initializeApp() {
         beautyLevelInput.addEventListener('input', (e) => {
             state.beautyLevel = parseInt(e.target.value);
             beautyValue.textContent = state.beautyLevel + '%';
+        });
+    }
+
+    // Makeup button
+    if (makeupBtn) {
+        makeupBtn.addEventListener('click', () => {
+            if (makeupPanel.classList.contains('hidden')) {
+                makeupPanel.classList.remove('hidden');
+                setupMakeupColorPickers();
+            } else {
+                makeupPanel.classList.add('hidden');
+            }
+        });
+    }
+
+    // Makeup color pickers
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.color-option')) {
+            const option = e.target.closest('.color-option');
+            const color = option.getAttribute('data-color');
+            const parent = option.closest('.color-grid');
+            
+            if (parent.id === 'lipColors') {
+                makeup.lipColor = color;
+                parent.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+                option.classList.add('selected');
+            } else if (parent.id === 'eyeColors') {
+                makeup.eyeColor = color;
+                parent.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+                option.classList.add('selected');
+            } else if (parent.id === 'blushColors') {
+                makeup.blushColor = color;
+                parent.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+                option.classList.add('selected');
+            }
+        }
+    });
+
+    // Makeup intensity sliders
+    const lipIntensitySlider = document.getElementById('lipIntensity');
+    const eyeIntensitySlider = document.getElementById('eyeIntensity');
+    const blushIntensitySlider = document.getElementById('blushIntensity');
+
+    if (lipIntensitySlider) {
+        lipIntensitySlider.addEventListener('input', (e) => {
+            makeup.lipIntensity = parseInt(e.target.value);
+        });
+    }
+    if (eyeIntensitySlider) {
+        eyeIntensitySlider.addEventListener('input', (e) => {
+            makeup.eyeIntensity = parseInt(e.target.value);
+        });
+    }
+    if (blushIntensitySlider) {
+        blushIntensitySlider.addEventListener('input', (e) => {
+            makeup.blushIntensity = parseInt(e.target.value);
+        });
+    }
+
+    // Reset and Save makeup
+    const resetMakeupBtn = document.getElementById('resetMakeup');
+    const saveMakeupBtn = document.getElementById('saveMakeup');
+
+    if (resetMakeupBtn) {
+        resetMakeupBtn.addEventListener('click', () => {
+            makeup.lipColor = '#FF1493';
+            makeup.lipIntensity = 60;
+            makeup.eyeColor = '#FFD700';
+            makeup.eyeIntensity = 50;
+            makeup.blushColor = '#FFB6C1';
+            makeup.blushIntensity = 40;
+            document.getElementById('lipIntensity').value = 60;
+            document.getElementById('eyeIntensity').value = 50;
+            document.getElementById('blushIntensity').value = 40;
+        });
+    }
+
+    if (saveMakeupBtn) {
+        saveMakeupBtn.addEventListener('click', () => {
+            const lookName = prompt('Save makeup look as:', 'My Look');
+            if (lookName) {
+                const look = JSON.parse(JSON.stringify(makeup));
+                localStorage.setItem(`makeup_${Date.now()}`, JSON.stringify(look));
+                alert(`💄 "${lookName}" saved!`);
+            }
         });
     }
 
@@ -433,6 +532,11 @@ function closeMirror() {
     if (beautySlider) {
         beautySlider.classList.add('hidden');
     }
+
+    // Hide makeup panel
+    if (makeupPanel) {
+        makeupPanel.classList.add('hidden');
+    }
     
     // Reset UI and clean up effects
     beautyBtn.classList.add('active');
@@ -529,6 +633,7 @@ function startMirrorEffects() {
             } else {
                 if (state.beautyModeOn && frameCount % 2 === 0) {
                     applyBeautyEffects();
+                    applyMakeupEffects();
                 }
                 if (frameCount % 45 === 0 && state.autoRingLightOn) {
                     detectDarknessAndApplyRingLight();
@@ -998,8 +1103,97 @@ window.addEventListener('beforeunload', () => {
 });
 
 // ============================================
-// Initialize Service Worker
+// Makeup Studio Functions
 // ============================================
+
+function setupMakeupColorPickers() {
+    // Select default colors
+    document.querySelectorAll('#lipColors .color-option').forEach((el, i) => {
+        if (i === 0) el.classList.add('selected');
+    });
+    document.querySelectorAll('#eyeColors .color-option').forEach((el, i) => {
+        if (i === 0) el.classList.add('selected');
+    });
+    document.querySelectorAll('#blushColors .color-option').forEach((el, i) => {
+        if (i === 0) el.classList.add('selected');
+    });
+}
+
+function closeMakeupPanel() {
+    makeupPanel.classList.add('hidden');
+}
+
+function applyMakeupEffects() {
+    if (!ctx || !videoFeed.videoWidth) return;
+
+    try {
+        const width = effectCanvas.width;
+        const height = effectCanvas.height;
+
+        // Apply lip color with intensity
+        if (makeup.lipIntensity > 0) {
+            ctx.globalAlpha = (makeup.lipIntensity / 100) * 0.4;
+            ctx.fillStyle = makeup.lipColor;
+            
+            // Draw lips area (lower part of face center)
+            const lipGradient = ctx.createRadialGradient(width / 2, height * 0.65, 10, width / 2, height * 0.65, 60);
+            lipGradient.addColorStop(0, makeup.lipColor);
+            lipGradient.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.fillStyle = lipGradient;
+            ctx.fillRect(width * 0.3, height * 0.55, width * 0.4, height * 0.2);
+            ctx.globalAlpha = 1;
+        }
+
+        // Apply eye shadow with intensity
+        if (makeup.eyeIntensity > 0) {
+            ctx.globalAlpha = (makeup.eyeIntensity / 100) * 0.3;
+            
+            // Left eye
+            const leftEyeGradient = ctx.createRadialGradient(width * 0.35, height * 0.35, 5, width * 0.35, height * 0.35, 50);
+            leftEyeGradient.addColorStop(0, makeup.eyeColor);
+            leftEyeGradient.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.fillStyle = leftEyeGradient;
+            ctx.fillRect(width * 0.2, height * 0.25, width * 0.3, height * 0.25);
+            
+            // Right eye
+            const rightEyeGradient = ctx.createRadialGradient(width * 0.65, height * 0.35, 5, width * 0.65, height * 0.35, 50);
+            rightEyeGradient.addColorStop(0, makeup.eyeColor);
+            rightEyeGradient.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.fillStyle = rightEyeGradient;
+            ctx.fillRect(width * 0.5, height * 0.25, width * 0.3, height * 0.25);
+            ctx.globalAlpha = 1;
+        }
+
+        // Apply blush with intensity
+        if (makeup.blushIntensity > 0) {
+            ctx.globalAlpha = (makeup.blushIntensity / 100) * 0.25;
+            
+            // Left cheek
+            const leftBlushGradient = ctx.createRadialGradient(width * 0.25, height * 0.45, 15, width * 0.25, height * 0.45, 80);
+            leftBlushGradient.addColorStop(0, makeup.blushColor);
+            leftBlushGradient.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.fillStyle = leftBlushGradient;
+            ctx.fillRect(width * 0.05, height * 0.35, width * 0.4, height * 0.2);
+            
+            // Right cheek
+            const rightBlushGradient = ctx.createRadialGradient(width * 0.75, height * 0.45, 15, width * 0.75, height * 0.45, 80);
+            rightBlushGradient.addColorStop(0, makeup.blushColor);
+            rightBlushGradient.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.fillStyle = rightBlushGradient;
+            ctx.fillRect(width * 0.55, height * 0.35, width * 0.4, height * 0.2);
+            ctx.globalAlpha = 1;
+        }
+    } catch (error) {
+        console.error('Makeup effects error:', error);
+    }
+}
+
+
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
